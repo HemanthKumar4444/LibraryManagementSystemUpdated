@@ -1,13 +1,11 @@
-FROM ubuntu:latest
-
+FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /app
-
-COPY . .
-
-RUN apt update && apt install -y openjdk-17-jdk maven
-
+COPY pom.xml .
+COPY src src
 RUN mvn clean package -DskipTests
 
-EXPOSE 8080
-
-CMD ["java", "-jar", "target/App.jar"]
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=build /app/target/App.jar app.jar
+EXPOSE 10000
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-10000} -jar /app/app.jar"]
