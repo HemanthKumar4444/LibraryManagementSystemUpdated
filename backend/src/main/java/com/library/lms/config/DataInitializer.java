@@ -31,21 +31,22 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedUsers() {
-        createUserIfMissing("admin", "admin@library.com", "admin123", Set.of("ADMIN", "LIBRARIAN"));
-        createUserIfMissing("librarian", "librarian@library.com", "lib123", Set.of("LIBRARIAN"));
-        createUserIfMissing("reader", "reader@library.com", "reader123", Set.of("USER"));
+        upsertSeedUser("admin", "admin@library.com", "admin123", Set.of("ADMIN", "LIBRARIAN"));
+        upsertSeedUser("librarian", "librarian@library.com", "lib123", Set.of("LIBRARIAN"));
+        upsertSeedUser("reader", "reader@library.com", "reader123", Set.of("USER"));
     }
 
-    private void createUserIfMissing(String username, String email, String rawPassword, Set<String> roles) {
-        if (!userRepository.existsByUsername(username)) {
-            userRepository.save(User.builder()
-                    .username(username)
-                    .email(email)
-                    .password(passwordEncoder.encode(rawPassword))
-                    .roles(roles)
-                    .enabled(true)
-                    .build());
-        }
+    private void upsertSeedUser(String username, String email, String rawPassword, Set<String> roles) {
+        User user = userRepository.findByUsername(username)
+                .orElse(User.builder().username(username).build());
+
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(rawPassword));
+        user.setRoles(roles);
+        user.setEnabled(true);
+
+        userRepository.save(user);
     }
 
     private void seedBooks() {
